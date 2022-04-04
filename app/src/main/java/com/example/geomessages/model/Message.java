@@ -6,7 +6,6 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "messages_table")
 public class Message {
 
-    private Boolean isActive;
     private String firstname;
     private String lastname;
     @PrimaryKey
@@ -14,14 +13,6 @@ public class Message {
     private String latitude;
     private String longitude;
     private String message;
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
 
     public String getFirstname() {
         return firstname;
