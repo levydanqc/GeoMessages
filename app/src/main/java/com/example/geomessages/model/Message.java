@@ -2,7 +2,7 @@ package com.example.geomessages.model;
 
 import androidx.room.Entity;
 
-@Entity(tableName = "messages_table")
+@Entity(tableName = "messages")
 public class Message {
 
     private String firstname;
