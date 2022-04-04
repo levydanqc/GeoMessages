@@ -1,14 +1,14 @@
-package com.example.geomessages.ui.home;
+package com.example.geomessages.ui.liste;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class HomeViewModel extends ViewModel {
+public class ListeViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public HomeViewModel() {
+    public ListeViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is home fragment");
     }

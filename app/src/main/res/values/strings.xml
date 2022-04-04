@@ -9,7 +9,7 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Configuration</string>
 
-    <string name="menu_home">Home</string>
+    <string name="menu_liste">Liste</string>
     <string name="menu_maps">Carte</string>
     <string name="action_delete">Suppression</string>
 </resources>

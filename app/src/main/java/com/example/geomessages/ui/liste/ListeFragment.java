@@ -1,4 +1,4 @@
-package com.example.geomessages.ui.home;
+package com.example.geomessages.ui.liste;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,22 +10,22 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.geomessages.databinding.FragmentHomeBinding;
+import com.example.geomessages.databinding.FragmentListeBinding;
 
-public class HomeFragment extends Fragment {
+public class ListeFragment extends Fragment {
 
-    private FragmentHomeBinding binding;
+    private FragmentListeBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+        ListeViewModel listeViewModel =
+                new ViewModelProvider(this).get(ListeViewModel.class);
 
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        binding = FragmentListeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textHome;
-        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        final TextView textView = binding.textListe;
+        listeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
         return root;
     }
