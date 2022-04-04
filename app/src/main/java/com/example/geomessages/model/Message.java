@@ -1,14 +1,12 @@
 package com.example.geomessages.model;
 
 import androidx.room.Entity;
-import androidx.room.PrimaryKey;
 
 @Entity(tableName = "messages_table")
 public class Message {
 
     private String firstname;
     private String lastname;
-    @PrimaryKey
     private String picture;
     private String latitude;
     private String longitude;
