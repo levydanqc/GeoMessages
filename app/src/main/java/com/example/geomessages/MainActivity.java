@@ -1,11 +1,16 @@
 package com.example.geomessages;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
@@ -32,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private ListeViewModel listeViewModel;
     private TextView tvNom;
     private TextView tvPrenom;
+    private int REQUEST_CODE = 1234;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +79,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-//        tvPrenom = findViewById(R.id.tv_prenom);
-//        tvPrenom.setText("Cegep");
-//        tvNom = findViewById(R.id.tv_nom);
-//        tvNom.setText("Garneau");
+
+        View header = navigationView.getHeaderView(0);
+        tvPrenom = (TextView) header.findViewById(R.id.tv_prenom);
+        tvNom = (TextView) header.findViewById(R.id.tv_nom);
+        createView();
+    }
+
+    void writeSharePreferences(String prenom, String nom) {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(getString(R.string.nav_header_prenom), prenom);
+        editor.putString(getString(R.string.nav_header_nom), nom);
+        editor.apply();
     }
 
     @Override
@@ -101,63 +116,31 @@ public class MainActivity extends AppCompatActivity {
                 });
                 return true;
             case R.id.action_settings:
+                Intent settings = new Intent(this, ConfigActivity.class);
+                settings.putExtra(getString(R.string.nav_header_prenom), tvPrenom.getText().toString());
+                settings.putExtra(getString(R.string.nav_header_nom), tvNom.getText().toString());
+                startActivityForResult(settings, REQUEST_CODE);
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
-//
-//    public void showModal(String title, int id) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle(title);
-//
-//        Context context = getContext();
-//        LinearLayout layout = new LinearLayout(context);
-//        layout.setOrientation(LinearLayout.VERTICAL);
-//
-//        final EditText titre = new EditText(context);
-//        final EditText info = new EditText(context);
-//
-//        titre.setSingleLine();
-//        info.setSingleLine();
-//
-//        if (id == -1) {
-//            titre.setHint("Titre");
-//            info.setHint("Description");
-//        } else {
-//            AppExecutors.getInstance().diskIO().execute(() -> {
-//                Tache tache = mDb.todoDao().getTodo(id);
-//                titre.setText(tache.getTitle());
-//                info.setText(tache.getInfo());
-//            });
-//        }
-//
-//        layout.addView(titre);
-//        layout.addView(info);
-//        builder.setView(layout);
-//        builder.setPositiveButton("Valider", (dialog, which) -> {
-//        });
-//        builder.setNegativeButton("Annuler", (dialog, which) -> dialog.dismiss());
-//
-//        AlertDialog dialog = builder.create();
-//        dialog.show();
-//
-//        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
-//                !titre.getText().toString().isEmpty() && !info.getText().toString().isEmpty());
-//
-//        TextWatcher watcher = new TextWatcher() {
-//            public void beforeTextChanged(CharSequence s, int start,
-//                                          int count, int after) {
-//            }
-//
-//            public void onTextChanged(CharSequence s, int start,
-//                                      int before, int count) {
-//                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(
-//                        !titre.getText().toString().isEmpty() && !info.getText().toString().isEmpty());
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//            }
-//        };
-//
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+            writeSharePreferences(
+                    data.getStringExtra(getString(R.string.nav_header_prenom)),
+                    data.getStringExtra(getString(R.string.nav_header_nom))
+            );
+            createView();
+        }
+    }
+
+    private void createView() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        tvPrenom.setText(sharedPref.getString(getString(R.string.nav_header_prenom), "Cegep"));
+        tvNom.setText(sharedPref.getString(getString(R.string.nav_header_nom), "Garneau"));
+
+    }
 }
