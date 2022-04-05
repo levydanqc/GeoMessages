@@ -2,24 +2,29 @@ package com.example.geomessages;
 
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.View;
+import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.geomessages.data.AppExecutors;
 import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.ActivityMainBinding;
+import com.example.geomessages.ui.liste.ListeViewModel;
 import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
     private MessagesRoomDatabase mDb;
+    private ListeViewModel listeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        findViewById(R.id.action_settings).setOnClickListener(this);
-        findViewById(R.id.action_delete).setOnClickListener(this);
+        listeViewModel = new ViewModelProvider(this).get(ListeViewModel.class);
     }
 
     @Override
@@ -61,13 +65,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
             case R.id.action_delete:
-                mDb.messageDao().deleteAll();
-                break;
+                AppExecutors.getInstance().diskIO().execute(() -> {
+                    mDb.messageDao().deleteAll();
+                });
+                return true;
             case R.id.action_settings:
-                break;
+                return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 }

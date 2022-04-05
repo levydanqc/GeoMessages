@@ -95,19 +95,16 @@ public class ListeFragment extends Fragment {
         rvMessages.setAdapter(messageAdapter);
 
         if (listeViewModel.getMessages().getValue() == null || listeViewModel.getMessages().getValue().size() < 1) {
-            getMessages(getContext(), new ListMessagesAsyncResponse() {
-                @Override
-                public void processFinished(ArrayList<Message> messagesArrayList) {
-                    AppExecutors.getInstance().diskIO().execute(
-                            () -> {
-                                for (Message message : messagesArrayList) {
-                                    mDb.messageDao().insert(message);
-                                }
+            getMessages(getContext(), messagesArrayList -> {
+                AppExecutors.getInstance().diskIO().execute(
+                        () -> {
+                            for (Message message : messagesArrayList) {
+                                mDb.messageDao().insert(message);
                             }
-                    );
-                    messages.addAll(messagesArrayList);
-                    messageAdapter.notifyDataSetChanged();
-                }
+                        }
+                );
+                messages.addAll(messagesArrayList);
+                messageAdapter.notifyDataSetChanged();
             });
         }
     }
