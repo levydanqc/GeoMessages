@@ -19,6 +19,6 @@ public interface MessagesDao {
     @Query("delete from messages")
     void deleteAll();
 
-    @Query("select * from messages order by lastname DESC")
+    @Query("select * from messages order by lastname")
     LiveData<List<Message>> getMessages();
 }

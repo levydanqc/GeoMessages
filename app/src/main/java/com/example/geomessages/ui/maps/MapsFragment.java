@@ -1,9 +1,12 @@
 package com.example.geomessages.ui.maps;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,15 +20,17 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsFragment extends Fragment implements OnMapReadyCallback {
+public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter {
 
     private FragmentMapsBinding binding;
     private GoogleMap mMap;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
         MapsViewModel mapsViewModel =
                 new ViewModelProvider(this).get(MapsViewModel.class);
 
@@ -53,10 +58,33 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnInfoWindowClickListener(this);
+        mMap.setInfoWindowAdapter(this);
 
-        // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
+    @Override
+    public void onInfoWindowClick(@NonNull Marker marker) {
+        Log.d("TAG", "Info window clicked");
+    }
+
+    @Nullable
+    @Override
+    public View getInfoContents(@NonNull Marker marker) {
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.marker_layout, null);
+        TextView tvMarker = view.findViewById(R.id.tv_marker);
+        tvMarker.setText(marker.getTitle());
+        ImageView ivMarker = view.findViewById(R.id.iv_marker);
+        ivMarker.setImageResource(R.drawable.ic_launcher_foreground);
+        return view;
+    }
+
+    @Nullable
+    @Override
+    public View getInfoWindow(@NonNull Marker marker) {
+        return null;
     }
 }

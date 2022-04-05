@@ -1,19 +1,26 @@
 package com.example.geomessages.ui.maps;
 
+import android.app.Application;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-public class MapsViewModel extends ViewModel {
+import com.example.geomessages.data.MessagesRoomDatabase;
+import com.example.geomessages.model.Message;
 
-    private final MutableLiveData<String> mText;
+import java.util.List;
 
-    public MapsViewModel() {
-        mText = new MutableLiveData<>();
-        mText.setValue("This is maps fragment");
+public class MapsViewModel extends AndroidViewModel {
+
+    private final LiveData<List<Message>> messages;
+
+    public MapsViewModel(Application application) {
+        super(application);
+        MessagesRoomDatabase mDb = MessagesRoomDatabase.getDatabase(application);
+        messages = mDb.messageDao().getMessages();
     }
 
-    public LiveData<String> getText() {
-        return mText;
+    public LiveData<List<Message>> getMessages() {
+        return messages;
     }
 }
