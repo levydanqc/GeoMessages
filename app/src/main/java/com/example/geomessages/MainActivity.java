@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -18,9 +17,12 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.geomessages.data.AppExecutors;
 import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.ActivityMainBinding;
-import com.example.geomessages.ui.liste.ListeFragment;
+import com.example.geomessages.http.VolleyUtils;
+import com.example.geomessages.model.Message;
 import com.example.geomessages.ui.liste.ListeViewModel;
 import com.google.android.material.navigation.NavigationView;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,14 +57,22 @@ public class MainActivity extends AppCompatActivity {
 
         listeViewModel = new ViewModelProvider(this).get(ListeViewModel.class);
 
-        Fragment navHostFragment = getSupportFragmentManager().getPrimaryNavigationFragment();
-        assert navHostFragment != null;
-        Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
-        if (currentFragment instanceof ListeFragment) {
-            ListeFragment frag = (ListeFragment) currentFragment;
-            frag.loadMessages();
+        if (listeViewModel.getMessages().getValue() == null || listeViewModel.getMessages().getValue().size() < 1) {
+            new VolleyUtils().getMessages(this, new VolleyUtils.ListMessagesAsyncResponse() {
+                @Override
+                public void processFinished(ArrayList<Message> messagesArrayList) {
+                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            mDb.messageDao().deleteAll();
+                            for (Message article : messagesArrayList) {
+                                mDb.messageDao().insert(article);
+                            }
+                        }
+                    });
+                }
+            });
         }
-
 //        tvPrenom = findViewById(R.id.tv_prenom);
 //        tvPrenom.setText("Cegep");
 //        tvNom = findViewById(R.id.tv_nom);

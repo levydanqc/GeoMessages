@@ -69,6 +69,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         return messages.size();
     }
 
+    public void setMessages() { this.messages = messages;}
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvFirstName;
         private final TextView tvLastName;
