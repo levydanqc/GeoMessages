@@ -24,6 +24,7 @@ import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.ActivityMainBinding;
 import com.example.geomessages.http.VolleyUtils;
 import com.example.geomessages.model.Message;
+import com.example.geomessages.ui.ConfigActivity;
 import com.example.geomessages.ui.liste.ListeViewModel;
 import com.google.android.material.navigation.NavigationView;
 
