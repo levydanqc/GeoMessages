@@ -19,6 +19,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.geomessages.R;
+import com.example.geomessages.data.AppExecutors;
+import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.FragmentListeBinding;
 import com.example.geomessages.model.Message;
 import com.example.geomessages.ui.MessageAdapter;
@@ -34,6 +36,8 @@ public class ListeFragment extends Fragment {
     private RecyclerView rvMessages;
     private MessageAdapter messageAdapter;
     private ArrayList<Message> messages;
+    private MessagesRoomDatabase mDb;
+    private ListeViewModel listeViewModel;
 
     public interface ListMessagesAsyncResponse {
         void processFinished(ArrayList<Message> messagesArrayList);
@@ -41,8 +45,7 @@ public class ListeFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        ListeViewModel listeViewModel =
-                new ViewModelProvider(this).get(ListeViewModel.class);
+        listeViewModel = new ViewModelProvider(requireActivity()).get(ListeViewModel.class);
 
         binding = FragmentListeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -83,6 +86,7 @@ public class ListeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mDb = MessagesRoomDatabase.getDatabase(getContext());
 
         rvMessages = view.findViewById(R.id.rv_messages);
         messages = new ArrayList<>();
@@ -90,14 +94,22 @@ public class ListeFragment extends Fragment {
         rvMessages.setLayoutManager(new LinearLayoutManager(requireActivity()));
         rvMessages.setAdapter(messageAdapter);
 
-        getMessages(getContext(), new ListMessagesAsyncResponse() {
-            @Override
-            public void processFinished(ArrayList<Message> messagesArrayList) {
-                Log.d("TAG", "finished: " + messagesArrayList.size());
-                messages.addAll(messagesArrayList);
-                messageAdapter.notifyDataSetChanged();
-            }
-        });
+        if (listeViewModel.getMessages().getValue() == null || listeViewModel.getMessages().getValue().size() < 1) {
+            getMessages(getContext(), new ListMessagesAsyncResponse() {
+                @Override
+                public void processFinished(ArrayList<Message> messagesArrayList) {
+                    AppExecutors.getInstance().diskIO().execute(
+                            () -> {
+                                for (Message message : messagesArrayList) {
+                                    mDb.messageDao().insert(message);
+                                }
+                            }
+                    );
+                    messages.addAll(messagesArrayList);
+                    messageAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     @Override

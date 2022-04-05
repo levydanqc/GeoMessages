@@ -20,7 +20,7 @@ public abstract class MessagesRoomDatabase extends RoomDatabase {
     static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
-    public abstract MessagesDao todoDao();
+    public abstract MessagesDao messageDao();
 
     public static MessagesRoomDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {

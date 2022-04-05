@@ -1,12 +1,16 @@
 package com.example.geomessages.model;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 @Entity(tableName = "messages")
 public class Message {
 
     private String firstname;
     private String lastname;
+    @NonNull
+    @PrimaryKey
     private String picture;
     private String latitude;
     private String longitude;
