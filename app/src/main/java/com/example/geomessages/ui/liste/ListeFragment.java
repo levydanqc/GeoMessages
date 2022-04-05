@@ -1,8 +1,6 @@
 package com.example.geomessages.ui.liste;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,25 +8,21 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.Volley;
 import com.example.geomessages.R;
 import com.example.geomessages.data.AppExecutors;
 import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.FragmentListeBinding;
+import com.example.geomessages.http.VolleyUtils;
 import com.example.geomessages.model.Message;
 import com.example.geomessages.ui.MessageAdapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
+import java.util.List;
 
 public class ListeFragment extends Fragment {
 
@@ -39,9 +33,6 @@ public class ListeFragment extends Fragment {
     private MessagesRoomDatabase mDb;
     private ListeViewModel listeViewModel;
 
-    public interface ListMessagesAsyncResponse {
-        void processFinished(ArrayList<Message> messagesArrayList);
-    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -51,36 +42,6 @@ public class ListeFragment extends Fragment {
         View root = binding.getRoot();
 
         return root;
-    }
-
-    public void getMessages(Context context, ListMessagesAsyncResponse callback) {
-        ArrayList<Message> messages = new ArrayList<>();
-        String url = "https://onoup.site/data.json";
-        RequestQueue queue = Volley.newRequestQueue(requireContext());
-
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest
-                (Request.Method.GET, url, null, response ->
-                {
-                    for (int i = 0; i < response.length(); i++) {
-                        Message message = new Message();
-                        try {
-                            JSONObject jsonObject = response.getJSONObject(i);
-                            message.setFirstname(jsonObject.getString("firstname"));
-                            message.setLastname(jsonObject.getString("lastname"));
-                            message.setLongitude(jsonObject.getString("longitude"));
-                            message.setLatitude(jsonObject.getString("latitude"));
-                            message.setPicture(jsonObject.getString("picture"));
-                            message.setMessage(jsonObject.getString("message"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        messages.add(message);
-                    }
-                    if (callback != null) callback.processFinished(messages);
-                },
-                        error -> Log.d("TAG", "error: " + error));
-        queue.add(jsonArrayRequest);
-
     }
 
     @Override
@@ -94,17 +55,32 @@ public class ListeFragment extends Fragment {
         rvMessages.setLayoutManager(new LinearLayoutManager(requireActivity()));
         rvMessages.setAdapter(messageAdapter);
 
+        listeViewModel.getMessages().observe(getViewLifecycleOwner(), new Observer<List<Message>>() {
+            @Override
+            public void onChanged(List<Message> messagesList) {
+                messages.clear();
+                messages.addAll(messagesList);
+                messageAdapter.notifyDataSetChanged();
+            }
+        });
+
+    }
+
+    public void loadMessages() {
         if (listeViewModel.getMessages().getValue() == null || listeViewModel.getMessages().getValue().size() < 1) {
-            getMessages(getContext(), messagesArrayList -> {
-                AppExecutors.getInstance().diskIO().execute(
-                        () -> {
-                            for (Message message : messagesArrayList) {
-                                mDb.messageDao().insert(message);
+            new VolleyUtils().getMessages(getContext(), new VolleyUtils.ListMessagesAsyncResponse() {
+                @Override
+                public void processFinished(ArrayList<Message> messagesArrayList) {
+                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            mDb.messageDao().deleteAll();
+                            for (Message article : messagesArrayList) {
+                                mDb.messageDao().insert(article);
                             }
                         }
-                );
-                messages.addAll(messagesArrayList);
-                messageAdapter.notifyDataSetChanged();
+                    });
+                }
             });
         }
     }
