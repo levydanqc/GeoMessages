@@ -15,11 +15,16 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
-    private ArrayList<Message> messages;
+    private List<Message> messages;
 
     public MessageAdapter(ArrayList<Message> messages) {
+        this.messages = messages;
+    }
+
+    public void setMessages(List<Message> messages) {
         this.messages = messages;
     }
 
@@ -63,6 +68,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public int getItemCount() {
         return messages.size();
     }
+
+    public void setMessages() { this.messages = messages;}
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvFirstName;
