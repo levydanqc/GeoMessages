@@ -7,10 +7,12 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.TranslateAnimation;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +39,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.navigation.NavigationView;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMapLongClickListener {
 
@@ -47,11 +50,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     private LocationCallback locationCallback;
     private Location userLocation;
     private TextView tvDistance;
+    private MapsViewModel mapsViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        MapsViewModel mapsViewModel =
+        mapsViewModel =
                 new ViewModelProvider(this).get(MapsViewModel.class);
 
         binding = FragmentMapsBinding.inflate(inflater, container, false);
@@ -59,16 +63,14 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext());
 
         locationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     userLocation = location;
                 }
@@ -128,7 +130,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         LatLng sydney = new LatLng(46.8, -71.3);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
-//        mMap.animateCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
     private void enableLocation() {
@@ -171,7 +172,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         float distance = userLocation.distanceTo(location);
         tvDistance.setVisibility(View.VISIBLE);
-        tvDistance.setText(String.format("Distance: %skm", distance / 1000));
+        tvDistance.setText(String.format("Distance: %.2fkm", distance / 1000));
 
         Handler handler = new Handler();
         handler.postDelayed(() -> {
@@ -212,7 +213,40 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
     @Override
     public void onMapLongClick(@NonNull LatLng latLng) {
-        Marker marker = mMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+        Marker marker = mMap.addMarker(new MarkerOptions().position(latLng).title(""));
+
+        NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        String nom = ((TextView) headerView.findViewById(R.id.tv_nom)).getText().toString();
+        String prenom = ((TextView) headerView.findViewById(R.id.tv_prenom)).getText().toString();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Ajout d'un marker");
+
+        final EditText input = new EditText(requireContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setHint("Titre");
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            assert marker != null;
+            if (input.getText().toString().equals("")) {
+                marker.remove();
+                return;
+            }
+            marker.setTitle(input.getText().toString());
+            mapsViewModel.addMarker(marker, prenom, nom);
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            assert marker != null;
+            marker.remove();
+            dialog.cancel();
+        });
+
+        builder.show();
+
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
+
     }
+
 }

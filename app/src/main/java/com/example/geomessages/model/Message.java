@@ -16,6 +16,18 @@ public class Message {
     private String longitude;
     private String message;
 
+    public Message() {
+    }
+
+    public Message(String firstname, String lastname, @NonNull String picture, double latitude, double longitude, String message) {
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.picture = picture;
+        this.latitude = Double.toString(latitude);
+        this.longitude = Double.toString(longitude);
+        this.message = message;
+    }
+
     public String getFirstname() {
         return firstname;
     }
