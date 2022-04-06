@@ -28,17 +28,13 @@ import com.example.geomessages.ui.ConfigActivity;
 import com.example.geomessages.ui.liste.ListeViewModel;
 import com.google.android.material.navigation.NavigationView;
 
-import java.util.ArrayList;
-
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private ActivityMainBinding binding;
     private MessagesRoomDatabase mDb;
-    private ListeViewModel listeViewModel;
     private TextView tvNom;
     private TextView tvPrenom;
-    private int REQUEST_CODE = 1234;
+    private final int REQUEST_CODE = 1234;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
         mDb = MessagesRoomDatabase.getDatabase(this);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        com.example.geomessages.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
@@ -62,23 +58,16 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        listeViewModel = new ViewModelProvider(this).get(ListeViewModel.class);
+        ListeViewModel listeViewModel = new ViewModelProvider(this).get(ListeViewModel.class);
 
         if (listeViewModel.getMessages().getValue() == null || listeViewModel.getMessages().getValue().size() < 1) {
-            new VolleyUtils().getMessages(this, new VolleyUtils.ListMessagesAsyncResponse() {
-                @Override
-                public void processFinished(ArrayList<Message> messagesArrayList) {
-                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            mDb.messageDao().deleteAll();
-                            for (Message article : messagesArrayList) {
-                                mDb.messageDao().insert(article);
-                            }
+            new VolleyUtils().getMessages(this,
+                    messagesArrayList -> AppExecutors.getInstance().diskIO().execute(() -> {
+                        mDb.messageDao().deleteAll();
+                        for (Message article : messagesArrayList) {
+                            mDb.messageDao().insert(article);
                         }
-                    });
-                }
-            });
+                    }));
         }
 
         View header = navigationView.getHeaderView(0);
@@ -130,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+            assert data != null;
             writeSharePreferences(
                     data.getStringExtra(getString(R.string.nav_header_prenom)),
                     data.getStringExtra(getString(R.string.nav_header_nom))
