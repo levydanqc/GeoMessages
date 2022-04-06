@@ -44,7 +44,8 @@ import com.google.android.material.navigation.NavigationView;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 public class MapsFragment extends Fragment implements
         OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter,
@@ -59,7 +60,6 @@ public class MapsFragment extends Fragment implements
     private Location userLocation;
     private TextView tvDistance;
     private MapsViewModel mapsViewModel;
-    private List<Message> markers;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -77,7 +77,7 @@ public class MapsFragment extends Fragment implements
                 messagesList -> {
                     for (Message marker : messagesList) {
                         LatLng latLng = new LatLng(Double.parseDouble(marker.getLatitude()), Double.parseDouble(marker.getLongitude()));
-                        mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage()))
+                        Objects.requireNonNull(mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage())))
                                 .setTag(marker.getPicture());
                     }
                 });
@@ -100,16 +100,17 @@ public class MapsFragment extends Fragment implements
         return root;
     }
 
-//    @Override
-//    public void onDestroyView() {
-//        super.onDestroyView();
-//        binding = null;
-//    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
+
 
     @SuppressLint("MissingPermission")
     @Override
@@ -137,18 +138,16 @@ public class MapsFragment extends Fragment implements
         fusedLocationProviderClient.getLastLocation()
                 .addOnSuccessListener(requireActivity(), location -> {
                     if (location != null) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 7));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
                     }
                 });
 
         fusedLocationProviderClient.requestLocationUpdates(locationRequest,
                 locationCallback,
                 Looper.getMainLooper());
-
-//        LatLng sydney = new LatLng(46.8, -71.3);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
     }
 
+    @SuppressLint("MissingPermission")
     private void enableLocation() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -189,7 +188,7 @@ public class MapsFragment extends Fragment implements
 
         float distance = userLocation.distanceTo(location);
         tvDistance.setVisibility(View.VISIBLE);
-        tvDistance.setText(String.format("Distance: %.2fkm", distance / 1000));
+        tvDistance.setText(String.format(Locale.CANADA_FRENCH, "Distance: %.2fkm", distance / 1000));
 
         Handler handler = new Handler();
         handler.postDelayed(() -> {
@@ -208,7 +207,7 @@ public class MapsFragment extends Fragment implements
         TextView tvMarker = view.findViewById(R.id.tv_marker);
         tvMarker.setText(marker.getTitle());
         ImageView ivMarker = view.findViewById(R.id.iv_marker);
-        String url = marker.getTag().toString();
+        String url = Objects.requireNonNull(marker.getTag()).toString();
         Picasso.get().load(url)
                 .fetch(new Callback() {
                     @Override
@@ -280,6 +279,6 @@ public class MapsFragment extends Fragment implements
         builder.show();
 
         mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-
     }
+
 }
