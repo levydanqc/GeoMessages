@@ -27,6 +27,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.geomessages.R;
 import com.example.geomessages.databinding.FragmentMapsBinding;
+import com.example.geomessages.model.Message;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -40,8 +41,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.navigation.NavigationView;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
-public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMapLongClickListener {
+import java.util.List;
+
+public class MapsFragment extends Fragment implements
+        OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter,
+        GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener,
+        GoogleMap.OnMapLongClickListener {
 
     private static final int LOCATION_PERMISSION_CODE = 1234;
     private FragmentMapsBinding binding;
@@ -51,12 +59,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     private Location userLocation;
     private TextView tvDistance;
     private MapsViewModel mapsViewModel;
+    private List<Message> markers;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-
-        mapsViewModel =
-                new ViewModelProvider(this).get(MapsViewModel.class);
+        mapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
 
         binding = FragmentMapsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -65,6 +72,16 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 .findFragmentById(R.id.map);
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
+
+        mapsViewModel.getMessages().observe(getViewLifecycleOwner(),
+                messagesList -> {
+                    for (Message marker : messagesList) {
+                        LatLng latLng = new LatLng(Double.parseDouble(marker.getLatitude()), Double.parseDouble(marker.getLongitude()));
+                        mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage()))
+                                .setTag(marker.getPicture());
+                    }
+                });
+
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext());
 
@@ -83,11 +100,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         return root;
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
-    }
+//    @Override
+//    public void onDestroyView() {
+//        super.onDestroyView();
+//        binding = null;
+//    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -96,7 +113,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
     @SuppressLint("MissingPermission")
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnInfoWindowClickListener(this);
         mMap.setInfoWindowAdapter(this);
@@ -120,7 +137,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         fusedLocationProviderClient.getLastLocation()
                 .addOnSuccessListener(requireActivity(), location -> {
                     if (location != null) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 10));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 7));
                     }
                 });
 
@@ -128,8 +145,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 locationCallback,
                 Looper.getMainLooper());
 
-        LatLng sydney = new LatLng(46.8, -71.3);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
+//        LatLng sydney = new LatLng(46.8, -71.3);
+//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
     }
 
     private void enableLocation() {
@@ -191,7 +208,23 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         TextView tvMarker = view.findViewById(R.id.tv_marker);
         tvMarker.setText(marker.getTitle());
         ImageView ivMarker = view.findViewById(R.id.iv_marker);
-        ivMarker.setImageResource(R.drawable.ic_launcher_foreground);
+        String url = marker.getTag().toString();
+        Picasso.get().load(url)
+                .fetch(new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        Picasso.get().load(url)
+                                .placeholder(R.drawable.ic_baseline_account_circle_24)
+                                .into(ivMarker);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Picasso.get().load(R.drawable.ic_baseline_account_circle_24)
+                                .into(ivMarker);
+                    }
+                });
+
         return view;
     }
 
@@ -215,7 +248,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     public void onMapLongClick(@NonNull LatLng latLng) {
         Marker marker = mMap.addMarker(new MarkerOptions().position(latLng).title(""));
 
-        NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) requireActivity().findViewById(R.id.nav_view);
         View headerView = navigationView.getHeaderView(0);
         String nom = ((TextView) headerView.findViewById(R.id.tv_nom)).getText().toString();
         String prenom = ((TextView) headerView.findViewById(R.id.tv_prenom)).getText().toString();
@@ -235,7 +268,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 return;
             }
             marker.setTitle(input.getText().toString());
-            mapsViewModel.addMarker(marker, prenom, nom);
+            String url = mapsViewModel.addMarker(marker, prenom, nom);
+            marker.setTag(url);
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> {
             assert marker != null;
@@ -248,5 +282,4 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 
     }
-
 }

@@ -27,12 +27,14 @@ public class MapsViewModel extends AndroidViewModel {
         return messages;
     }
 
-    public void addMarker(Marker marker, String prenom, String nom) {
+    public String addMarker(Marker marker, String prenom, String nom) {
         String picture = "https://robohash.org/" +
                 nom.substring(0, 1).toUpperCase() + nom.substring(1).toLowerCase() +
                 prenom.substring(0, 1).toUpperCase() + prenom.substring(1).toLowerCase();
         Message message = new Message(prenom, nom, picture, marker.getPosition().latitude, marker.getPosition().longitude, marker.getTitle());
 
         AppExecutors.getInstance().diskIO().execute(() -> mDb.messageDao().insert(message));
+
+        return picture;
     }
 }
