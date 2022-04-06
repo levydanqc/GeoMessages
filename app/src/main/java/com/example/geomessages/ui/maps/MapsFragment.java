@@ -5,10 +5,12 @@ import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,13 +38,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
+public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, GoogleMap.InfoWindowAdapter, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMapLongClickListener {
 
     private static final int LOCATION_PERMISSION_CODE = 1234;
     private FragmentMapsBinding binding;
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
+    private Location userLocation;
+    private TextView tvDistance;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -66,11 +70,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    // Update UI with location data
-                    // ...
+                    userLocation = location;
                 }
             }
         };
+
+        tvDistance = root.findViewById(R.id.tv_distance);
+        tvDistance.setVisibility(View.INVISIBLE);
 
         return root;
     }
@@ -95,6 +101,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
+        mMap.setOnMapLongClickListener(this);
         enableLocation();
 
         LocationRequest locationRequest = LocationRequest.create();
@@ -119,7 +126,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 locationCallback,
                 Looper.getMainLooper());
 
-        LatLng sydney = new LatLng(-34, 151);
+        LatLng sydney = new LatLng(46.8, -71.3);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in sydney"));
 //        mMap.animateCamera(CameraUpdateFactory.newLatLng(sydney));
     }
@@ -158,7 +165,22 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
     @Override
     public void onInfoWindowClick(@NonNull Marker marker) {
-        Log.d("TAG", "Info window clicked");
+        Location location = new Location("Marker");
+        location.setLatitude(marker.getPosition().latitude);
+        location.setLongitude(marker.getPosition().longitude);
+
+        float distance = userLocation.distanceTo(location);
+        tvDistance.setVisibility(View.VISIBLE);
+        tvDistance.setText(String.format("Distance: %skm", distance / 1000));
+
+        Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            TranslateAnimation animate = new TranslateAnimation(0, 0, 0, 2 * tvDistance.getHeight());
+            animate.setDuration(500);
+            tvDistance.startAnimation(animate);
+            tvDistance.setVisibility(View.INVISIBLE);
+        }, 3000);
+
     }
 
     @Nullable
@@ -186,5 +208,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     @Override
     public void onMyLocationClick(@NonNull Location location) {
 
+    }
+
+    @Override
+    public void onMapLongClick(@NonNull LatLng latLng) {
+        Marker marker = mMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
     }
 }
