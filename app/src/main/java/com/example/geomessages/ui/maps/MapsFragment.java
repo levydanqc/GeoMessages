@@ -245,7 +245,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         builder.show();
 
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 
     }
 
