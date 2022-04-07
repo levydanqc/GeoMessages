@@ -1,5 +1,7 @@
 package com.example.geomessages.ui.maps;
 
+import static java.lang.Double.parseDouble;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
@@ -85,6 +87,18 @@ public class MapsFragment extends Fragment implements
             }
         };
 
+        mapsViewModel.getMessages().observe(getViewLifecycleOwner(), messages ->
+        {
+            if (mMap != null) {
+                mMap.clear();
+                for (Message marker : messages) {
+                    LatLng latLng = new LatLng(parseDouble(marker.getLatitude()), parseDouble(marker.getLongitude()));
+                    Objects.requireNonNull(mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage())))
+                            .setTag(marker.getPicture());
+                }
+            }
+        });
+
         tvDistance = root.findViewById(R.id.tv_distance);
         tvDistance.setVisibility(View.INVISIBLE);
 
@@ -101,10 +115,10 @@ public class MapsFragment extends Fragment implements
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (getArguments().size() > 0) {
+        if (getArguments() != null && getArguments().size() > 0) {
             String lat = MapsFragmentArgs.fromBundle(getArguments()).getLatitude();
             String lon = MapsFragmentArgs.fromBundle(getArguments()).getLongitude();
-            selected = new LatLng(Double.parseDouble(lat), Double.parseDouble(lon));
+            selected = new LatLng(parseDouble(lat), parseDouble(lon));
         }
     }
 
@@ -149,7 +163,7 @@ public class MapsFragment extends Fragment implements
         mapsViewModel.getMessages().observe(getViewLifecycleOwner(),
                 messagesList -> {
                     for (Message marker : messagesList) {
-                        LatLng latLng = new LatLng(Double.parseDouble(marker.getLatitude()), Double.parseDouble(marker.getLongitude()));
+                        LatLng latLng = new LatLng(parseDouble(marker.getLatitude()), parseDouble(marker.getLongitude()));
                         Objects.requireNonNull(mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage())))
                                 .setTag(marker.getPicture());
                     }
