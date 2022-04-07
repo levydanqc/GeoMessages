@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         mDb = MessagesRoomDatabase.getDatabase(this);
 
-        com.example.geomessages.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
+        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
