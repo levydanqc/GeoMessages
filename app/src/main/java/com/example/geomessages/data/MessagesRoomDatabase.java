@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-@Database(entities = {Message.class}, version = 1, exportSchema = false)
+@Database(entities = Message.class, version = 1, exportSchema = false)
 public abstract class MessagesRoomDatabase extends RoomDatabase {
     public static volatile MessagesRoomDatabase INSTANCE;
 

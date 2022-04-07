@@ -1,4 +1,4 @@
-package com.example.geomessages.ui;
+package com.example.geomessages;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,8 +9,6 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.geomessages.R;
 
 public class ConfigActivity extends AppCompatActivity implements View.OnClickListener {
     EditText etNom;
