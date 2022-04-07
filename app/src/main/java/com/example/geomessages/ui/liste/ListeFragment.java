@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,6 +18,7 @@ import com.example.geomessages.data.MessagesRoomDatabase;
 import com.example.geomessages.databinding.FragmentListeBinding;
 import com.example.geomessages.model.Message;
 import com.example.geomessages.ui.MessageAdapter;
+import com.example.geomessages.ui.liste.ListeFragmentDirections.ActionNavListeToNavMaps;
 
 import java.util.ArrayList;
 
@@ -56,6 +58,14 @@ public class ListeFragment extends Fragment {
                     messageAdapter.notifyDataSetChanged();
                 });
 
+        messageAdapter.setOnClickListener(new MessageAdapter.onItemClickListenerInterface() {
+            @Override
+            public void onItemClick(int position) {
+                Message clicked = messageAdapter.getMessage(position);
+                ActionNavListeToNavMaps action = ListeFragmentDirections.actionNavListeToNavMaps(clicked.getLatitude(), clicked.getLongitude());
+                Navigation.findNavController(view).navigate(action);
+            }
+        });
     }
 
     @Override

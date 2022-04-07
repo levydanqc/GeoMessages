@@ -60,6 +60,7 @@ public class MapsFragment extends Fragment implements
     private Location userLocation;
     private TextView tvDistance;
     private MapsViewModel mapsViewModel;
+    private LatLng selected;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -72,15 +73,6 @@ public class MapsFragment extends Fragment implements
                 .findFragmentById(R.id.map);
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
-
-        mapsViewModel.getMessages().observe(getViewLifecycleOwner(),
-                messagesList -> {
-                    for (Message marker : messagesList) {
-                        LatLng latLng = new LatLng(Double.parseDouble(marker.getLatitude()), Double.parseDouble(marker.getLongitude()));
-                        Objects.requireNonNull(mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage())))
-                                .setTag(marker.getPicture());
-                    }
-                });
 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext());
@@ -109,6 +101,11 @@ public class MapsFragment extends Fragment implements
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (getArguments().size() > 0) {
+            String lat = MapsFragmentArgs.fromBundle(getArguments()).getLatitude();
+            String lon = MapsFragmentArgs.fromBundle(getArguments()).getLongitude();
+            selected = new LatLng(Double.parseDouble(lat), Double.parseDouble(lon));
+        }
     }
 
 
@@ -135,16 +132,29 @@ public class MapsFragment extends Fragment implements
             return;
         }
 
-        fusedLocationProviderClient.getLastLocation()
-                .addOnSuccessListener(requireActivity(), location -> {
-                    if (location != null) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
-                    }
-                });
+        if (selected != null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selected, 15));
+        } else {
+            fusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(requireActivity(), location -> {
+                        if (location != null) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                        }
+                    });
+        }
 
         fusedLocationProviderClient.requestLocationUpdates(locationRequest,
                 locationCallback,
                 Looper.getMainLooper());
+
+        mapsViewModel.getMessages().observe(getViewLifecycleOwner(),
+                messagesList -> {
+                    for (Message marker : messagesList) {
+                        LatLng latLng = new LatLng(Double.parseDouble(marker.getLatitude()), Double.parseDouble(marker.getLongitude()));
+                        Marker m = mMap.addMarker(new MarkerOptions().position(latLng).title(marker.getMessage()));
+                        m.setTag(marker.getPicture());
+                    }
+                });
     }
 
     @SuppressLint("MissingPermission")

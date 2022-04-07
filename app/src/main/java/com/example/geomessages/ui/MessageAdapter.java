@@ -19,6 +19,20 @@ import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
     private List<Message> messages;
+    private onItemClickListenerInterface mListener;
+
+    public interface onItemClickListenerInterface {
+        void onItemClick(int position);
+    }
+
+    public void setOnClickListener(onItemClickListenerInterface listener) {
+        this.mListener = listener;
+    }
+
+    public Message getMessage(int position) {
+        return messages.get(position);
+    }
+
 
     public MessageAdapter(ArrayList<Message> messages) {
         this.messages = messages;
@@ -32,7 +46,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_row, parent, false);
-        return new MessageAdapter.ViewHolder(view);
+        return new ViewHolder(view, mListener);
     }
 
     @Override
@@ -43,6 +57,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         holder.tvMessage.setText(message.getMessage());
         holder.tvLatitude.setText(message.getLatitude());
         holder.tvLongitude.setText(message.getLongitude());
+
 
         String url = message.getPicture();
         Picasso.get().load(url)
@@ -69,9 +84,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         return messages.size();
     }
 
-    public void setMessages() { this.messages = messages;}
+    public void setMessages() {
+        this.messages = messages;
+    }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvFirstName;
         private final TextView tvLastName;
         private final TextView tvMessage;
@@ -79,7 +97,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         private final TextView tvLongitude;
         private final ImageView ivPicture;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView, final onItemClickListenerInterface listener) {
             super(itemView);
             tvFirstName = itemView.findViewById(R.id.tv_firstname);
             tvLastName = itemView.findViewById(R.id.tv_lastname);
@@ -87,6 +105,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             tvLatitude = itemView.findViewById(R.id.tv_latitude);
             tvLongitude = itemView.findViewById(R.id.tv_longitude);
             ivPicture = itemView.findViewById(R.id.iv_picture);
+
+            itemView.setOnClickListener((View v) -> {
+                if (listener != null) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        listener.onItemClick(position);
+                    }
+                }
+            });
+
         }
     }
 }

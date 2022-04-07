@@ -1,4 +1,4 @@
-package com.example.geomessages.ui;
+package com.example.geomessages;
 
 import android.content.Intent;
 import android.os.Bundle;
